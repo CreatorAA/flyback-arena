@@ -51,6 +51,14 @@ with ZipFile(candidate) as bundle:
     assert {system+'/'+n for n in ['server.toml','admin-web/index.html','admin-web/app.js']}<=names
  for rel in ('arena-server','flyback-bridge','run-delegated','data/bots/arena-bot-guard','data/bots/claude-fable-5.2'):
     assert (bundle.getinfo('Ubuntu-24.04-x86_64/'+rel).external_attr>>16)&0o111
+ prefix='Ubuntu-24.04-x86_64/bot-source/glibc/'
+ dsc,=[n for n in names if n.startswith(prefix) and n.endswith('.dsc')]
+ source_list=bundle.read(dsc).decode().splitlines()
+ members=[]
+ for line in source_list[source_list.index('Checksums-Sha256:')+1:]:
+    if not line.startswith(' '):break
+    members.append(prefix+line.split()[2])
+ assert members and set(members)<=names, 'Ubuntu glibc source package is incomplete'
  assert 'tar -xzf' not in bundle.read('Ubuntu-24.04-x86_64/README-Linux.md').decode()
 replace(candidate,dest)
 print(dest,dest.stat().st_size)

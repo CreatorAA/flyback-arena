@@ -33,4 +33,15 @@ sudo journalctl -u flyback -n 30 --no-pager
 - 备份配置及 `/var/lib/flyback`，特别是其中的 `identity/`。保留身份目录，玩家下次连接时仍可认出同一服务器。用 `sudo systemctl stop flyback` 正常停止；替换程序后 `sudo systemctl start flyback`。
 - 含 Bot 的对局需要 cgroup v2、Landlock 和 seccomp；随包的 systemd 单元和 `run-delegated` 在启动时仅设置本服务自己的 cgroup。若受限容器没有委托 CPU、memory、pids 控制器，用支持委托的 VM 或宿主运行；不要试图放开整棵 cgroup 的权限。无须运行 root 游戏进程。
 
-**给开发者**：发行树 `bot-source/` 提供每个正式选手的 C++ 源码和本版 `dart.hpp`。例如 `g++ -std=c++17 -O2 -static -Ibot-source bot-source/gpt-6.2-astra/player.cpp -o gpt-6.2-astra` 即可重新链接这个选手。构建环境的 Ubuntu 库版本及许可证见 `licenses/`；本版 Bot 使用 [Ubuntu glibc 2.39-0ubuntu8.12 源包](https://launchpad.net/ubuntu/+source/glibc/2.39-0ubuntu8.12)。完整仓库的 `flyback/native/game/package-linux.sh` 会从 CMake 安装树制作同样布局的发行包。
+## 修改库或重新链接选手
+
+在解压后的发行目录，`bot-source/` 下有全部 13 名选手的 C++ 源码、匹配的 `dart.hpp` 和构建时使用的 Ubuntu glibc 源包（含发行版补丁）。无需联网获取这些源码。构建工具和库的具体版本见 `licenses/Ubuntu-package-versions.txt`。
+
+```sh
+# 使用 dpkg-dev 展开 glibc，并应用 Ubuntu 随包补丁。
+dpkg-source -x bot-source/glibc/glibc_*.dsc
+# 链接一个选手，输出到当前目录，不改动正在运行的服务器。
+g++ -std=c++17 -O2 -static -Ibot-source bot-source/gpt-6.2-astra/player.cpp -o gpt-6.2-astra
+```
+
+要换用自己修改过的 glibc，可在独立的 Ubuntu 构建环境中构建、安装修改后的 glibc 开发库，再在那里运行同一条选手编译命令。其他选手只需替换源码目录名和输出名；停服后可替换 `data/bots/` 下对应程序。

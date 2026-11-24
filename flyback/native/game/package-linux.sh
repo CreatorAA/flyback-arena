@@ -9,7 +9,8 @@ test "$(dpkg-deb -f "$deb" Package)" = libmsquic
 test "$(dpkg-deb -f "$deb" Version)" = 2.6.4
 test "$(dpkg-deb -f "$deb" Architecture)" = amd64
 stage=$(mktemp -d)
-trap 'rm -rf -- "$stage"' EXIT
+source_tmp=$(mktemp -d)
+trap 'rm -rf -- "$stage" "$source_tmp"' EXIT
 cmake --install "$build" --prefix "$stage"
 for path in arena-server flyback-bridge data/bots/arena-bot-guard run-delegated; do test -x "$stage/$path"; done
 for path in server.toml admin-web/app.js README-Linux.md examples/flyback.service; do test -f "$stage/$path"; done
@@ -33,4 +34,14 @@ for prog in "$stage"/data/bots/*; do
     cp "$repo/boomerang/bots/$id/player.cpp" "$stage/bot-source/$id/"
 done
 test "$(find "$stage/bot-source" -name player.cpp | wc -l)" -eq 13
+# libc6-dev supplies libc.a. Package on the bot build host before upgrading its toolchain.
+glibc_version=$(dpkg-query -W -f='${source:Version}' libc6-dev:amd64)
+test -n "$glibc_version"
+if [ -n "${FLYBACK_GLIBC_SOURCE_DIR:-}" ]; then
+    srcdir=$(realpath "$FLYBACK_GLIBC_SOURCE_DIR")
+else
+    srcdir=$source_tmp
+    (cd "$srcdir" && apt-get source --download-only --only-source "glibc=$glibc_version")
+fi
+python3 "$repo/flyback/packaging/stage-glibc-source.py" "$srcdir" "$stage/bot-source/glibc" "$glibc_version"
 tar -czf "$out" -C "$stage" .
