@@ -1,0 +1,28 @@
+[server]
+name = "飞返 · 周末服"
+listen = "0.0.0.0:27860"
+advertise = ""
+allow_room_creation = true
+max_rooms = 16
+max_active_matches = 4
+max_spectators_per_room = 32
+idle_room_ttl_seconds = 300
+egress_budget_kbps = 0
+[match]
+ruleset = "classic20"
+player_snapshot_hz = 20
+spectator_snapshot_hz = 10
+[storage]
+data_dir = "./data"
+[admin.web]
+enabled = true
+listen = "127.0.0.1:27861"
+public_origin = ""
+tls_mode = "reverse_proxy"
+[replays]
+enabled = true
+retain_days = 14
+max_disk_mib = 4096
+[logs]
+rotate_mib = 16
+keep_files = 8

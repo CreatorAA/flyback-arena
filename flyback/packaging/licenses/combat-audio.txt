@@ -1,0 +1,27 @@
+Flyback Arena / 飞返竞技场 · Combat Foley
+
+The short battle cues are edited mixes of the following audio assets. Their
+authors share them under Creative Commons CC0 1.0 Universal:
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Iwan Gabovitch (qubodup)
+  Swish - bamboo stick weapon swhoshes
+  https://opengameart.org/content/swish-bamboo-stick-weapon-swhoshes
+  40 wet towel club/pound/hit/attack sounds
+  https://opengameart.org/content/40-wet-towel-clubpoundhitattack-sounds
+  Metal Interactions
+  https://opengameart.org/content/metal-interactions
+  The wet towel author's publication expressly releases the recordings under
+  CC0 and supersedes the different notice in the original archive.
+
+Independent.nu (published by qubodup)
+  35 wooden cracks/hits/destructions
+  https://opengameart.org/content/35-wooden-crackshitsdestructions
+
+Kenney / Kenney Vleugels
+  Impact Sounds 1.0: https://kenney.nl/assets/impact-sounds
+  RPG Audio: https://kenney.nl/assets/rpg-audio
+
+Flyback edits: shortlist and takes, mono mixdown, transient trimming, playback
+rate changes, EQ, layered levels and fades. No synthetic tones or generated
+noise are mixed into these cues.

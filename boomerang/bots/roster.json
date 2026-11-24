@@ -1,0 +1,69 @@
+{
+  "official": [
+    {
+      "seat": "astra",
+      "sealed_dir": "astra62",
+      "dir": "bots/gpt-6.2-astra"
+    },
+    {
+      "seat": "sol",
+      "sealed_dir": "sol62",
+      "dir": "bots/gpt-6.2-sol"
+    },
+    {
+      "seat": "fable",
+      "sealed_dir": "fable",
+      "dir": "bots/claude-fable-5.2"
+    },
+    {
+      "seat": "opus",
+      "sealed_dir": "opus",
+      "dir": "bots/claude-opus-5.5"
+    },
+    {
+      "seat": "carbon",
+      "sealed_dir": "gemini_carbon",
+      "dir": "bots/gemini-4-carbon"
+    },
+    {
+      "seat": "hydrogen",
+      "sealed_dir": "gemini_hydrogen",
+      "dir": "bots/gemini-4-hydrogen"
+    },
+    {
+      "seat": "grok",
+      "sealed_dir": "grok",
+      "dir": "bots/grok-4.7"
+    },
+    {
+      "seat": "glm",
+      "sealed_dir": "glm",
+      "dir": "bots/glm-5.3"
+    },
+    {
+      "seat": "deepseek",
+      "sealed_dir": "deepseek_dsh",
+      "dir": "bots/deepseek-v4.1-flash"
+    },
+    {
+      "seat": "kimi",
+      "sealed_dir": "kimi2",
+      "dir": "bots/kimi-k3.1-pro"
+    },
+    {
+      "seat": "qwen",
+      "sealed_dir": "qwen",
+      "dir": "bots/qwen4-max"
+    },
+    {
+      "seat": "mimo",
+      "sealed_dir": "mimo",
+      "dir": "bots/mimo-v2.6-pro"
+    },
+    {
+      "seat": "doubao",
+      "sealed_dir": "doubao",
+      "dir": "bots/doubao-seed-evolving"
+    }
+  ]
+}

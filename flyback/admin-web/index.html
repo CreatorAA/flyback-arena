@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>飞返竞技场 · 专服管理台</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <!-- 首屏鉴权 / 初始化引导门控 -->
+    <section id="gate-view" class="gate-wrap hidden" aria-live="polite">
+      <div class="gate-card">
+        <div class="brand-row">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 36 36" width="36" height="36" fill="none">
+              <circle cx="18" cy="18" r="17" fill="#E3F7F0" stroke="#12B886" stroke-width="2"/>
+              <path d="M10 13C15.5 9.5 23.5 11.5 25.5 18.5C26.5 22 24.5 26 21 26.5C21.5 22.5 20.5 18.5 17.5 16C15 14 12.2 13.8 10 13Z" fill="#12B886"/>
+              <circle cx="13" cy="23" r="3" fill="#FF7A3C"/>
+            </svg>
+          </span>
+          <div>
+            <h1 class="gate-title">飞返竞技场 · 专服管理台</h1>
+            <p id="gate-server-meta" class="gate-sub">Flyback Dedicated Server Console</p>
+          </div>
+        </div>
+
+        <!-- 未初始化引导（严禁网页认领首任管理员） -->
+        <div id="bootstrap-box" class="notice-card notice-warn hidden">
+          <h2>尚未初始化管理员账号</h2>
+          <p>出于安全边界要求，管理台不允许通过网页首次认领管理员权限。请在专服所在主机终端运行以下本地命令完成初始化（支持无回显设置密码）：</p>
+          <pre class="cli-code">arena-server admin init --config server.toml</pre>
+          <div class="gate-actions">
+            <button id="btn-recheck-session" class="btn btn-primary" type="button">已完成初始化，重新检测</button>
+          </div>
+        </div>
+
+        <!-- 标准登录表单 -->
+        <form id="login-form" class="login-form hidden" autocomplete="off">
+          <div class="field">
+            <label for="login-username">管理员 / 值班账号</label>
+            <input id="login-username" name="username" type="text" required placeholder="例如 admin">
+          </div>
+          <div class="field">
+            <label for="login-password">口令</label>
+            <input id="login-password" name="password" type="password" required placeholder="输入管理口令">
+          </div>
+          <div id="login-error" class="form-alert hidden" role="alert"></div>
+          <button id="btn-login-submit" class="btn btn-primary btn-block" type="submit">登录管理台</button>
+          <p class="gate-footnote">登录受来源 IP 退避限流、SameSite Cookie 与 X-CSRF-Token 保护；不含玩家房密或密钥导出。</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 已登录主工作台 -->
+    <div id="console-view" class="console-wrap hidden">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 36 36" width="32" height="32" fill="none">
+              <circle cx="18" cy="18" r="17" fill="#E3F7F0" stroke="#12B886" stroke-width="2"/>
+              <path d="M10 13C15.5 9.5 23.5 11.5 25.5 18.5C26.5 22 24.5 26 21 26.5C21.5 22.5 20.5 18.5 17.5 16C15 14 12.2 13.8 10 13Z" fill="#12B886"/>
+              <circle cx="13" cy="23" r="3" fill="#FF7A3C"/>
+            </svg>
+          </div>
+          <div>
+            <div class="server-title-row">
+              <strong id="hdr-server-name">专服</strong>
+              <span id="hdr-drain-pill" class="pill pill-warn hidden">维护排空中</span>
+              <span id="hdr-creation-pill" class="pill pill-muted hidden">已停建新房</span>
+            </div>
+            <div class="server-meta-row">
+              <span>对外 UDP：<code id="hdr-advertise-udp">—</code></span>
+              <span>指纹：<code id="hdr-fingerprint" class="mono-trim">—</code></span>
+              <button id="btn-copy-fp" class="btn-chip" type="button">复制指纹</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div id="sse-pill" class="sse-pill sse-ok" title="SSE 实时事件流状态">
+            <span class="sse-dot"></span>
+            <span id="sse-text">实时同步中</span>
+            <span id="hdr-cursor" class="mono-num">#0</span>
+          </div>
+          <button id="btn-resync" class="btn btn-soft hidden" type="button">重新拉取快照</button>
+          <div class="user-pill">
+            <span id="hdr-username">—</span>
+            <span id="hdr-role" class="role-badge">viewer</span>
+          </div>
+          <button id="btn-logout" class="btn btn-soft" type="button">退出</button>
+        </div>
+      </header>
+
+      <!-- 命令受理与反馈条 -->
+      <div id="command-banner" class="command-banner hidden" role="status" aria-live="polite"></div>
+
+      <!-- 导航标签栏 -->
+      <nav class="tabbar" role="tablist" aria-label="管理台功能模块">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="overview">总览</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="rooms">房间与成员</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="bots-maps">选手与地图</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="capacity">容量与配置</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="replays-audit">回放、日志与审计</button>
+      </nav>
+
+      <main class="main-content">
+        <!-- 1. 总览 -->
+        <section id="tab-overview" class="tab-panel active">
+          <div id="overview-alerts" class="alert-stack"></div>
+
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <div class="kpi-label">活跃比赛 / 额度</div>
+              <div id="kpi-matches" class="kpi-value mono-num">0 / 0</div>
+              <div id="kpi-matches-sub" class="kpi-sub">开放房间 0 / 0</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">在线席位与观众</div>
+              <div id="kpi-population" class="kpi-value mono-num">0</div>
+              <div id="kpi-population-sub" class="kpi-sub">真人 0 · AI 0 · 观众 0</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">宿主 CPU · 宿主与选手内存</div>
+              <div id="kpi-compute" class="kpi-value mono-num">0%</div>
+                <div id="kpi-compute-sub" class="kpi-sub">等待进程采样</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">实时出站上行 / 预算</div>
+              <div id="kpi-egress" class="kpi-value mono-num">0 kbps</div>
+              <div class="progress-track"><div id="kpi-egress-bar" class="progress-fill"></div></div>
+              <div id="kpi-egress-sub" class="kpi-sub">预算 0 kbps</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">步界调度迟到 P99</div>
+              <div id="kpi-ticklate" class="kpi-value mono-num">—</div>
+              <div id="kpi-ticklate-sub" class="kpi-sub">目标 ≤ 5.0 ms</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">配置版本 / 遥测游标</div>
+              <div id="kpi-revisions" class="kpi-value mono-num">v0</div>
+              <div id="kpi-revisions-sub" class="kpi-sub">SSE event_cursor #0</div>
+            </article>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>按房间实时出站与帧率分布</h2>
+                <p class="panel-sub">快速判断“整服吃紧”还是“单房高观众占满上行”；点击任意行直接进入该房调控</p>
+              </div>
+              <span id="overview-platform" class="pill pill-muted">—</span>
+            </div>
+            <div class="table-wrap table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>房间</th>
+                    <th>状态</th>
+                    <th>参赛（真人/AI）</th>
+                    <th>观众（在线 / 生效上限）</th>
+                    <th>观战频率</th>
+                    <th>裁判步频</th>
+                    <th>实时出站</th>
+                    <th>积压</th>
+                  </tr>
+                </thead>
+                <tbody id="overview-room-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- 2. 房间与成员 -->
+        <section id="tab-rooms" class="tab-panel">
+          <div class="panel filter-panel">
+            <div class="filter-row">
+              <div class="field-inline">
+                <label for="filter-mode">模式</label>
+                <select id="filter-mode">
+                  <option value="all">全部模式</option>
+                  <option value="duel">1v1</option>
+                  <option value="ffa3">1v1v1 (三人)</option>
+                  <option value="ffa4">1v1v1v1 (四人)</option>
+                </select>
+              </div>
+              <div class="field-inline">
+                <label for="filter-state">状态</label>
+                <select id="filter-state">
+                  <option value="all">全部状态</option>
+                  <option value="ready">准备中</option>
+                  <option value="loading">载入 / 倒计时</option>
+                  <option value="playing">进行中</option>
+                  <option value="paused">已暂停</option>
+                  <option value="finished">已结束 / 结算</option>
+                </select>
+              </div>
+              <div class="field-inline">
+                <label for="filter-lock">密码锁</label>
+                <select id="filter-lock">
+                  <option value="all">全部</option>
+                  <option value="locked">仅密码房</option>
+                  <option value="public">仅公开房</option>
+                </select>
+              </div>
+              <div class="field-inline field-grow">
+                <label for="filter-search">搜索</label>
+                <input id="filter-search" type="search" placeholder="输入房间 ID、房名或地图">
+              </div>
+              <div class="filter-actions">
+                <span id="rooms-count-pill" class="pill pill-muted mono-num">0 / 0 间</span>
+                <button id="btn-toggle-creation" class="btn btn-soft" type="button">切换建房许可</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="rooms-split">
+            <div id="rooms-list" class="rooms-list" aria-label="房间列表"></div>
+            <aside id="room-detail" class="panel room-detail" aria-label="房间详情与成员调控"></aside>
+          </div>
+        </section>
+
+        <!-- 3. 选手与地图 -->
+        <section id="tab-bots-maps" class="tab-panel">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>AI 选手清单与沙箱健康度</h2>
+                <p class="panel-sub">禁用仅影响后续选座开局，绝不在进行中热替换已入局的 Bot</p>
+              </div>
+            </div>
+            <div class="table-wrap table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>选手</th>
+                    <th>来源</th>
+                    <th>二进制 / 沙箱隔离</th>
+                    <th>首步 / 常规步耗时</th>
+                    <th>累计超时</th>
+                    <th>在用房间</th>
+                    <th>最近异常</th>
+                    <th>后续选取</th>
+                  </tr>
+                </thead>
+                <tbody id="bots-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>地图池与三人兼容校验</h2>
+                <p class="panel-sub">仅展示通过对应人数出生与通路检验的合法地图配置</p>
+              </div>
+            </div>
+            <div class="table-wrap table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>地图名称</th>
+                    <th>ID</th>
+                    <th>主题风格</th>
+                    <th>支持模式</th>
+                    <th>三人校验</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody id="maps-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- 4. 容量与配置 -->
+        <section id="tab-capacity" class="tab-panel">
+          <div class="capacity-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>服务器容量、频控与维护策略</h2>
+                  <p class="panel-sub">提交携带 <code>expected_revision</code>（独立于遥测游标），遇并发修改触发 409 差异对比</p>
+                </div>
+                <span id="cap-rev-badge" class="pill pill-info mono-num">配置修订 v0</span>
+              </div>
+
+              <form id="capacity-form" class="cap-form">
+                <div class="cap-fields">
+                  <div class="field">
+                    <label for="cap-max-rooms">最大房间数 <code>max_rooms</code></label>
+                    <input id="cap-max-rooms" type="number" min="1" max="1000" required>
+                    <span class="field-hint">含准备中、暂停与结算房；降低不删除现房</span>
+                  </div>
+                  <div class="field">
+                    <label for="cap-max-matches">最大活跃对局 <code>max_active_matches</code></label>
+                    <input id="cap-max-matches" type="number" min="1" max="256" required>
+                    <span class="field-hint">同时在局（含暂停）上限，不影响大厅与准备厅</span>
+                  </div>
+                  <div class="field">
+                    <label for="cap-max-specs">每房默认观众上限 <code>max_spectators_per_room</code></label>
+                    <input id="cap-max-specs" type="number" min="-1" max="10000" required>
+                    <span class="field-hint"><code>-1</code> 不限，<code>0</code> 禁入；降帽仅阻新观众，存量不断线</span>
+                  </div>
+                  <div class="field">
+                    <label for="cap-spec-hz">默认观战下发频率 <code>spectator_snapshot_hz</code></label>
+                    <select id="cap-spec-hz">
+                      <option value="10">10 Hz（默认推荐）</option>
+                      <option value="5">5 Hz（省上行）</option>
+                      <option value="20">20 Hz（高带宽服）</option>
+                    </select>
+                    <span class="field-hint">只影响观战；参赛席逐步接收状态</span>
+                  </div>
+                  <div class="field">
+                    <label for="cap-egress-budget">出站带宽预算 (kbps)</label>
+                    <input id="cap-egress-budget" type="number" min="0" max="1000000" required>
+                    <span class="field-hint"><code>0</code> 表示不限。持续超预算时先降低观众刷新率，再暂停新观众入场；不降参赛席刷新率。</span>
+                  </div>
+                  <div class="field">
+                    <label for="cap-idle-ttl">无人空房回收秒数 <code>idle_room_ttl_seconds</code></label>
+                    <input id="cap-idle-ttl" type="number" min="0" max="86400" required>
+                    <span class="field-hint"><code>0</code> 及以上合法；不回收仍有观众的 AI 表演赛</span>
+                  </div>
+                </div>
+
+                <div class="toggle-row">
+                  <label class="checkbox-label">
+                    <input id="cap-allow-create" type="checkbox">
+                    <span>允许玩家在专服创建新房间 (<code>allow_room_creation</code>)</span>
+                  </label>
+                </div>
+
+                <div id="cap-diff-preview" class="diff-preview hidden"></div>
+
+                <div class="form-actions">
+                  <button id="btn-cap-submit" class="btn btn-primary" type="submit">应用配置变更</button>
+                  <button id="btn-cap-reset" class="btn btn-soft" type="button">还原为服务端当前值</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel side-ops-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>维护窗口与不可热更项说明</h2>
+                  <p class="panel-sub">排空模式下拒绝新建与新开局，现有比赛可打完回厅</p>
+                </div>
+              </div>
+
+              <div class="ops-box">
+                <div class="ops-status-row">
+                  <span>当前维护状态：</span>
+                  <strong id="ops-drain-status">正常接单中</strong>
+                </div>
+                <p id="ops-drain-desc" class="ops-desc">开启排空后，总览与准备厅都会显式提示正在维护，方便管理员观察剩余在局场数后平滑停服。</p>
+                <button id="btn-toggle-drain" class="btn btn-warn" type="button">开启维护排空</button>
+              </div>
+
+              <div class="ops-box">
+                <h3>只读端点参数（需重启生效）</h3>
+                <dl class="kv-list">
+                  <dt>游戏 UDP 监听</dt><dd id="ro-listen-udp" class="mono-num">—</dd>
+                  <dt>公布外部地址</dt><dd id="ro-adv-udp" class="mono-num">—</dd>
+                  <dt>管理 HTTP 监听</dt><dd id="ro-admin-listen" class="mono-num">—</dd>
+                  <dt>外部管理 Origin</dt><dd id="ro-public-origin">—</dd>
+                </dl>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- 5. 回放、日志与审计 -->
+        <section id="tab-replays-audit" class="tab-panel">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>已结算回放下载</h2>
+                <p class="panel-sub">仅展示已结算且观战延迟已清空的对局回放；进行中对局严禁在此提前下载</p>
+              </div>
+              <div class="field-inline">
+                <label for="replay-filter">筛选</label>
+                <input id="replay-filter" type="search" placeholder="按房名、地图或回放 ID 过滤">
+              </div>
+            </div>
+            <div class="table-wrap table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>回放 ID</th>
+                    <th>房间 / 轮次</th>
+                    <th>模式 / 地图</th>
+                    <th>步数</th>
+                    <th>结算摘要</th>
+                    <th>结束时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="replays-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="logs-audit-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>脱敏运行与 Bot 故障日志</h2>
+                  <p class="panel-sub">自动排除私钥、房密、凭证校验串与会话令牌</p>
+                </div>
+                <div class="field-inline">
+                  <label for="logs-filter">筛选</label>
+                  <input id="logs-filter" type="search" placeholder="过滤来源、房间或内容">
+                </div>
+              </div>
+              <div id="logs-list" class="feed-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>管理操作审计流</h2>
+                  <p class="panel-sub">记录操作者、角色、命令 ID、目标资源与结果</p>
+                </div>
+              </div>
+              <div id="audit-list" class="feed-list"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- 409 版本冲突对比弹窗 -->
+    <div id="conflict-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="conflict-title">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h2 id="conflict-title">配置版本冲突（409 Conflict）</h2>
+          <span id="conflict-revs" class="pill pill-warn mono-num">期望 v0 · 最新 v0</span>
+        </div>
+        <p id="conflict-desc" class="modal-desc">另一位管理员或控制台已提交了更新的配置版本。你的本地草稿已被安全保留，请逐项对比下表差异后决定下一步动作（系统绝不会自动覆盖或自动重提）：</p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>配置项</th>
+                <th>服务端最新值</th>
+                <th>你的本地草稿</th>
+              </tr>
+            </thead>
+            <tbody id="conflict-diff-tbody"></tbody>
+          </table>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-conflict-resubmit" class="btn btn-primary" type="button">保留草稿并基于最新版本重提</button>
+          <button id="btn-conflict-discard" class="btn btn-soft" type="button">放弃草稿，同步服务端最新值</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

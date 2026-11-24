@@ -1,0 +1,17 @@
+/dist/
+/out/
+/build*/
+/.cache/
+**/.godot/
+**/__pycache__/
+*.py[cod]
+*.log
+*.key
+*.pfx
+*.p12
+.env
+.env.*
+!*.example
+/flyback/client/build/
+/flyback/client/.godot/
+/flyback/client/export_credentials.cfg

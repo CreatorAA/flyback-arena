@@ -1,0 +1,212 @@
+{
+  "delta": {
+    "base": {
+      "darts": [
+        {
+          "seat": 0,
+          "st": 0,
+          "vis": false
+        },
+        {
+          "age": 0,
+          "left": 0,
+          "seat": 1,
+          "st": 0,
+          "vis": true,
+          "vx": 0,
+          "vy": 0,
+          "x": 1000,
+          "y": 800
+        }
+      ],
+      "events": [],
+      "fallen": 0,
+      "finished": false,
+      "last_applied_input_seq": 8,
+      "players": [
+        {
+          "alive": true,
+          "kills": 0,
+          "seat": 0,
+          "vis": false
+        },
+        {
+          "alive": true,
+          "ax": 0,
+          "ay": 0,
+          "cd": 0,
+          "expose": 0,
+          "face": 18000,
+          "kills": 1,
+          "seat": 1,
+          "st": 0,
+          "timer": 0,
+          "vis": true,
+          "vx": -250,
+          "vy": 0,
+          "x": 1000,
+          "y": 800
+        }
+      ],
+      "pov": 1,
+      "room_id": "R7",
+      "round_epoch": 1,
+      "tick": 20,
+      "timeline_epoch": 0,
+      "type": "snapshot",
+      "warn": -1
+    },
+    "next": {
+      "darts": [
+        {
+          "seat": 0,
+          "st": 0,
+          "vis": false
+        },
+        {
+          "age": 0,
+          "left": 0,
+          "seat": 1,
+          "st": 0,
+          "vis": true,
+          "vx": 0,
+          "vy": 0,
+          "x": 1000,
+          "y": 800
+        }
+      ],
+      "events": [],
+      "fallen": 0,
+      "finished": false,
+      "last_applied_input_seq": 8,
+      "players": [
+        {
+          "alive": true,
+          "kills": 0,
+          "seat": 0,
+          "vis": false
+        },
+        {
+          "alive": true,
+          "ax": 0,
+          "ay": 0,
+          "cd": 0,
+          "expose": 0,
+          "face": 18000,
+          "kills": 1,
+          "seat": 1,
+          "st": 0,
+          "timer": 0,
+          "vis": true,
+          "vx": -250,
+          "vy": 0,
+          "x": 750,
+          "y": 800
+        }
+      ],
+      "pov": 1,
+      "room_id": "R7",
+      "round_epoch": 1,
+      "tick": 21,
+      "timeline_epoch": 0,
+      "type": "snapshot",
+      "warn": -1
+    },
+    "patch_hex": "012002010201002002F3030202"
+  },
+  "format": "FBAR 1.0, clear application frame; no reliable stream length prefix",
+  "frames": [
+    {
+      "case": "vanilla_hello",
+      "hex": "464241520100000100080A0007626173655F6964060F666C796261636B3A76616E696C6C610008646174616772616D02000E696D706C656D656E746174696F6E0610666C796261636B2D6E61746976652F3100136F7074696F6E616C5F657874656E73696F6E730700000770726F66696C650300000B70726F746F5F6D616A6F720301000B70726F746F5F6D696E6F720300001372657175697265645F657874656E73696F6E730700000772756C657365740609636C617373696332300106065F68656C6C6F",
+      "json": {
+        "base_id": "flyback:vanilla",
+        "datagram": true,
+        "implementation": "flyback-native/1",
+        "optional_extensions": [],
+        "profile": 0,
+        "proto_major": 1,
+        "proto_minor": 0,
+        "required_extensions": [],
+        "ruleset": "classic20",
+        "type": "_hello"
+      },
+      "reliable": true
+    },
+    {
+      "case": "input",
+      "hex": "46424152010000400008072C03031904E7071A03002A03E8072B0300020605696E707574280307",
+      "json": {
+        "act": 3,
+        "ax": -1000,
+        "ay": 0,
+        "mx": 1000,
+        "my": 0,
+        "op": "input",
+        "seq": 7
+      },
+      "reliable": false
+    },
+    {
+      "case": "restricted_snapshot",
+      "hex": "4642415201000041000B025237020028020001011002000200020302D00FC00CF30300A09902000000000000000000020001D00FC00C0000000000",
+      "json": {
+        "darts": [
+          {
+            "seat": 0,
+            "st": 0,
+            "vis": false
+          },
+          {
+            "age": 0,
+            "left": 0,
+            "seat": 1,
+            "st": 0,
+            "vis": true,
+            "vx": 0,
+            "vy": 0,
+            "x": 1000,
+            "y": 800
+          }
+        ],
+        "events": [],
+        "fallen": 0,
+        "finished": false,
+        "last_applied_input_seq": 8,
+        "players": [
+          {
+            "alive": true,
+            "kills": 0,
+            "seat": 0,
+            "vis": false
+          },
+          {
+            "alive": true,
+            "ax": 0,
+            "ay": 0,
+            "cd": 0,
+            "expose": 0,
+            "face": 18000,
+            "kills": 1,
+            "seat": 1,
+            "st": 0,
+            "timer": 0,
+            "vis": true,
+            "vx": -250,
+            "vy": 0,
+            "x": 1000,
+            "y": 800
+          }
+        ],
+        "pov": 1,
+        "room_id": "R7",
+        "round_epoch": 1,
+        "tick": 20,
+        "timeline_epoch": 0,
+        "type": "snapshot",
+        "warn": -1
+      },
+      "reliable": false
+    }
+  ]
+}

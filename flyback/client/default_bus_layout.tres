@@ -1,0 +1,12 @@
+[gd_resource type="AudioBusLayout" format=3]
+
+[sub_resource type="AudioEffectHardLimiter" id="Limiter_combat"]
+resource_name = "Transient ceiling"
+ceiling_db = -1.25
+
+[resource]
+bus/0/name = &"Master"
+bus/1/name = &"ArenaFX"
+bus/1/send = &"Master"
+bus/1/effect/0/effect = SubResource("Limiter_combat")
+bus/1/effect/0/enabled = true

@@ -1,0 +1,187 @@
+{
+  "date": "2026-11-22",
+  "platform": "Windows 11 x64 / AMD Ryzen 5 3600, MinGW GCC 16.2, OpenSSL MsQuic 2.6.4; Windows 与同机 Ubuntu 24.04.5 x86_64 QEMU TCG 均参与开发验证，机器非独占压测",
+  "wire_replay": {
+    "source": "boomerang/replays/g23457.txt",
+    "tool": "flyback-net-traffic",
+    "conditions": "20Hz 玩家全可见状态上界与 10Hz 观众，两个真实 loopback QUIC 连接；统计出站 UDP 负载（不含 IP/UDP 头）",
+    "states": 62,
+    "seconds": 3.1,
+    "player_application_bytes_mean": 178.0483870967742,
+    "player_application_bytes_max": 244,
+    "player_received": 62,
+    "spectator_received": 31,
+    "player_udp_payload_kbit_s": 40.83354838709677,
+    "spectator_udp_payload_kbit_s": 19.127741935483872
+  },
+  "weak": {
+    "tool": "flyback-net-test --weak",
+    "conditions": "单程均匀25–55ms、每包2%配置丢失概率，加1s双向断流；真实本机 UDP 中转，无真人操作",
+    "random_packet_drops": 4,
+    "outage_packet_drops": 43,
+    "inputs_of_100": 77,
+    "snapshots_of_100": 79,
+    "ordered_controls_of_10": 10,
+    "result_during_outage_delivered": true,
+    "input_delivered_p50_ms": 40.2124,
+    "input_delivered_p95_ms": 57.0375
+  },
+  "authoritative_load": {
+    "tool": "measure-host.ps1 -Mode match",
+    "conditions": "独立专服与同机106条独立 TLS/QUIC 连接；无图形客户端，6个真人席使用中立输入，无 AI；开赛预热后采样服务器与各连接",
+    "network": {
+      "authenticated_quic_connections": 106,
+      "isolation_1_5s": {
+        "room_A_ticks": 30,
+        "room_B_paused_ticks": 0
+      },
+      "room_A": {
+        "players": 4,
+        "players_udp_payload_kbit_s": 127.38342206457702,
+        "spectator_frames_max": 100,
+        "spectator_frames_min": 100,
+        "spectator_frames_total": 10000,
+        "spectator_hz_average": 9.999201063834999,
+        "spectators": 100,
+        "spectators_udp_payload_kbit_s": 914.339744254434,
+        "ticks": 200,
+        "tps": 19.998402127669998
+      },
+      "room_B": {
+        "players": 2,
+        "ticks": 200,
+        "tps": 19.998402127669998
+      },
+      "window_real_seconds": 10.000799
+    },
+    "server_one_core_cpu_pct": 11.897552882268098,
+    "server_working_set_mib": 42.2265625,
+    "server_private_mib": 29.19921875,
+    "server_threads": 22,
+    "before_cadence_fix_frames_per_spectator_in_10s": 91
+  },
+  "interop": {
+    "tools": "flyback-bridge + arena-server, interop_clients.py",
+    "windows_clients_to_ubuntu_server": {
+      "pinned_tls_clients": 2,
+      "map": "twinlakes",
+      "seats": [
+        0,
+        1
+      ],
+      "initial_ticks": [
+        0,
+        0
+      ],
+      "observed_ticks": [
+        10,
+        10
+      ],
+      "consumed_input_seq": [
+        3,
+        3
+      ],
+      "x_before_mm": 2774,
+      "x_after_mm": 3774
+    },
+    "ubuntu_client_to_windows_server": {
+      "trust_confirmed": true,
+      "directory_received": true,
+      "created_human_duel": true,
+      "creator_seat": 0
+    }
+  },
+  "empty_rooms_windows": {
+    "sample": {
+      "seconds": 1799.9998864,
+      "baseline": {
+        "one_core_cpu_pct": 0.17795140011959948,
+        "working_set_mib": 18.08203125,
+        "private_mib": 4.8515625,
+        "threads": 17
+      },
+      "hundred_empty": {
+        "one_core_cpu_pct": 0.362847245121915,
+        "working_set_mib": 19.2734375,
+        "private_mib": 6.03125,
+        "threads": 17
+      },
+      "rss_delta_mib": 1.19140625
+    },
+    "conditions": "两个无头 Windows 服同时使用匹配配置、Web 与回放关闭。各用一个 QUIC 客户端预热，一个保留100个空房、一个无房；采样前客户端退出。30分钟累计单核CPU时间与末次工作集。",
+    "tool": "measure-host.ps1 -Mode idle -Seconds 1800"
+  },
+  "human_live_view": {
+    "tool": "flyback/tests/human_view.py APP_BIN",
+    "conditions": "两名真人协议客户端，独立 TLS/QUIC 连接，Windows 回环专服、石阵、相向移动并停下投镖。按两端共有的模拟 tick 对齐合法可见字段；新旧各一局，出生扰动种子各异。",
+    "before": {
+      "matched_ticks": 37,
+      "moving_seat_pairs": 50,
+      "player_mismatches": 50,
+      "airborne_dart_pairs": 4,
+      "dart_mismatches": 4,
+      "hit_receipts": []
+    },
+    "after": {
+      "matched_ticks": 37,
+      "moving_by_seat": [
+        25,
+        25
+      ],
+      "moving_seat_pairs": 50,
+      "player_mismatches": 0,
+      "airborne_dart_pairs": 4,
+      "dart_mismatches": 0,
+      "hit_receipts": [
+        {
+          "rule_step": 35,
+          "ordinal": 0,
+          "thrower": 0,
+          "target": 1,
+          "delivery_ticks": [
+            36,
+            36
+          ]
+        }
+      ],
+      "same_tick_player_example": {
+        "tick": 2,
+        "seat": 0,
+        "owner_xy_mm": [
+          1470,
+          6684
+        ],
+        "opponent_xy_mm": [
+          1470,
+          6684
+        ]
+      },
+      "same_tick_dart_example": {
+        "tick": 33,
+        "seat": 0,
+        "fields": [
+          "st",
+          "x",
+          "y",
+          "vx",
+          "vy"
+        ],
+        "owner": [
+          1,
+          7446,
+          6141,
+          996,
+          -90
+        ],
+        "opponent": [
+          1,
+          7446,
+          6141,
+          996,
+          -90
+        ]
+      }
+    },
+    "clock_note": "规则转换 step 35 完成后的状态编号为 tick 36；两端同一快照均收到命中。这一比较不测单程网络耗时。"
+  }
+}

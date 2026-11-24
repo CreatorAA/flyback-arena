@@ -1,0 +1,18 @@
+#!/bin/sh
+# Use as the ExecStart wrapper of the delegated service. No root permissions are required.
+set -eu
+if [ "$#" -eq 0 ]; then echo 'Usage: run-delegated /opt/flyback/arena-server --config /etc/flyback/server.toml' >&2; exit 2; fi
+rel=$(sed -n 's/^0:://p' /proc/self/cgroup)
+case "$rel" in ""|/) echo 'Run within a dedicated systemd unit with Delegate=cpu memory pids, not the root cgroup.' >&2;exit 1;; esac
+root=/sys/fs/cgroup$rel
+if [ ! -w "$root/cgroup.subtree_control" ]; then
+    echo "Missing cgroup v2 delegation: $root" >&2;exit 1
+fi
+mkdir -p "$root/host"
+echo "$$" > "$root/host/cgroup.procs"
+if [ -n "$(cat "$root/cgroup.procs")" ]; then
+    echo 'Other processes still occupy the delegated root; give this server its own service unit.' >&2;exit 1
+fi
+echo '+cpu +memory +pids' > "$root/cgroup.subtree_control"
+export FLYBACK_CGROUP="$root"
+exec "$@"

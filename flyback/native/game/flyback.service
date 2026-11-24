@@ -1,0 +1,18 @@
+[Unit]
+Description=Flyback Arena dedicated server
+After=network.target
+
+[Service]
+Type=simple
+User=flyback
+Group=flyback
+WorkingDirectory=/opt/flyback
+ExecStart=/opt/flyback/run-delegated /opt/flyback/arena-server --config /etc/flyback/server.toml
+Delegate=cpu memory pids
+NoNewPrivileges=yes
+StateDirectory=flyback
+Restart=on-failure
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
